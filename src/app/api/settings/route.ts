@@ -9,15 +9,14 @@ export async function GET(request: Request) {
     let settings = await UserSettings.findOne();
     if (!settings) {
       settings = await UserSettings.create({
+        name: 'User',
         theme: 'dark',
-        accentColor: 'blue',
-        weekStartsOn: 1, // Monday
-        notifications: {
-          dailyReminder: true,
-          emailUpdates: false
-        }
+        accentColor: '#3B82F6',
+        dashboardWidgets: ['dailyCompletion', 'currentStreak', 'habitsCompleted', 'tasksCompleted', 'productivity'],
+        lifeScoreWeights: { health: 30, learning: 25, productivity: 25, habits: 20 },
       });
     }
+
     
     return NextResponse.json({ success: true, data: settings });
   } catch (error) {

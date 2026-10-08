@@ -37,18 +37,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'date is required' }, { status: 400 });
     }
     
-    const parsedDate = parseISO(date);
+    const dateStr = date.split('T')[0];
     
     const entry = await SleepEntry.findOneAndUpdate(
-      { 
-        date: {
-          $gte: startOfDay(parsedDate),
-          $lte: endOfDay(parsedDate)
-        }
-      },
-      { date: parsedDate, duration, quality, bedTime, wakeTime, factors, notes },
+      { date: dateStr },
+      { date: dateStr, duration, quality, sleepTime: bedTime, wakeTime },
       { new: true, upsert: true, runValidators: true }
     );
+
     
     return NextResponse.json({ success: true, data: entry }, { status: 201 });
   } catch (error) {

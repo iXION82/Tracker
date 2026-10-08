@@ -100,7 +100,7 @@ export default function CalendarView({
                 </span>
                 {dayMood && (
                   <span className="text-lg" title={`Mood: ${dayMood.mood}`}>
-                    {MOOD_EMOJIS[dayMood.mood as keyof typeof MOOD_EMOJIS]}
+                    {MOOD_EMOJIS[dayMood.mood as keyof typeof MOOD_EMOJIS]?.emoji}
                   </span>
                 )}
               </div>

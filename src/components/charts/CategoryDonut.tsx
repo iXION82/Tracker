@@ -25,7 +25,7 @@ export default function CategoryDonut({ data }: { data: any[] }) {
         <Tooltip
           contentStyle={{ backgroundColor: '#18181B', borderColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }}
           itemStyle={{ color: '#fff' }}
-          formatter={(value: number) => [`${value}%`, 'Share']}
+          formatter={(value: any) => [`${value}%`, 'Share']}
         />
         <Legend verticalAlign="bottom" height={36} iconType="circle" />
         <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" fill="#fff" style={{ fontSize: '24px', fontWeight: 'bold' }}>

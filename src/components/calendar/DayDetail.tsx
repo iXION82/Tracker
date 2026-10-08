@@ -35,7 +35,7 @@ export default function DayDetail({
             {format(date, 'EEEE, MMMM d, yyyy')}
             {mood && (
               <span className="text-2xl" title="Mood">
-                {MOOD_EMOJIS[mood.mood as keyof typeof MOOD_EMOJIS]}
+                {MOOD_EMOJIS[mood.mood as keyof typeof MOOD_EMOJIS]?.emoji}
               </span>
             )}
           </DialogTitle>

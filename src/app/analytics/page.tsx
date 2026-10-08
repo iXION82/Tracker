@@ -10,25 +10,28 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Target, Activity, Zap, CheckCircle2 } from 'lucide-react';
 import { subDays, startOfDay, format, startOfWeek, subWeeks } from 'date-fns';
 
-export const revalidate = 60;
+
+import { connection } from 'next/server';
 
 export default async function AnalyticsPage() {
+  await connection();
   await connectDB();
   
   const now = new Date();
-  const thirtyDaysAgo = subDays(startOfDay(now), 30);
+  const thirtyDaysAgoStr = format(subDays(startOfDay(now), 30), 'yyyy-MM-dd');
   
   const [habitsCount, logs, moodEntries, timeEntries] = await Promise.all([
-    Habit.countDocuments({ status: 'active' }),
-    HabitLog.find({ date: { $gte: thirtyDaysAgo } }).lean(),
-    MoodEntry.find({ date: { $gte: thirtyDaysAgo } }).sort({ date: 1 }).lean(),
-    TimeEntry.find({ startTime: { $gte: thirtyDaysAgo } }).lean()
+    Habit.countDocuments({ active: true }),
+    HabitLog.find({ date: { $gte: thirtyDaysAgoStr } }).lean() as Promise<any[]>,
+    MoodEntry.find({ date: { $gte: thirtyDaysAgoStr } }).sort({ date: 1 }).lean() as Promise<any[]>,
+    TimeEntry.find({ date: { $gte: thirtyDaysAgoStr } }).lean() as Promise<any[]>,
   ]);
 
   // Basic stats
   const totalLogs = logs.length;
   const completedLogs = logs.filter((l: any) => l.completed).length;
   const avgCompletion = totalLogs > 0 ? Math.round((completedLogs / totalLogs) * 100) : 0;
+
   
   // Mood Data
   const moodData = moodEntries.map((entry: any) => ({

@@ -46,20 +46,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'habitId and date are required' }, { status: 400 });
     }
     
-    const parsedDate = parseISO(date);
+    const dateStr = date.split('T')[0]; // ensure YYYY-MM-DD format
     
     // Upsert habit log
     const log = await HabitLog.findOneAndUpdate(
-      { 
-        habitId,
-        date: {
-          $gte: startOfDay(parsedDate),
-          $lte: endOfDay(parsedDate)
-        }
-      },
-      { habitId, date: parsedDate, completed, value, duration, note },
+      { habitId, date: dateStr },
+      { habitId, date: dateStr, completed, value, duration, note },
       { new: true, upsert: true, runValidators: true }
     );
+
     
     return NextResponse.json({ success: true, data: log });
   } catch (error) {

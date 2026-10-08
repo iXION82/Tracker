@@ -49,19 +49,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'date is required' }, { status: 400 });
     }
     
-    const parsedDate = parseISO(date);
+    const dateStr = date.split('T')[0];
     
-    // Upsert journal entry by date (one per day usually)
+    // Upsert journal entry by date (one per day)
     const entry = await JournalEntry.findOneAndUpdate(
-      { 
-        date: {
-          $gte: startOfDay(parsedDate),
-          $lte: endOfDay(parsedDate)
-        }
-      },
-      { date: parsedDate, content, tags, mood, isFavorite },
+      { date: dateStr },
+      { date: dateStr, content, tags, mood },
       { new: true, upsert: true, runValidators: true }
     );
+
     
     return NextResponse.json({ success: true, data: entry }, { status: 201 });
   } catch (error) {

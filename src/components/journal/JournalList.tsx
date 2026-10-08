@@ -84,7 +84,7 @@ export default function JournalList({ initialEntries }: JournalListProps) {
             >
               <CardHeader className="pb-3 flex flex-row items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="text-2xl">{MOOD_EMOJIS[entry.mood as keyof typeof MOOD_EMOJIS] || '😐'}</div>
+                  <div className="text-2xl">{MOOD_EMOJIS[entry.mood as keyof typeof MOOD_EMOJIS]?.emoji || '😐'}</div>
                   <div>
                     <CardTitle className="text-base text-white">{entry.title || 'Untitled Entry'}</CardTitle>
                     <p className="text-xs text-zinc-400">

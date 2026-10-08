@@ -55,9 +55,11 @@ async function seed() {
     await UserSettings.create({
       name: 'Ayushman',
       theme: 'dark',
-      notificationsEnabled: true,
-      timeZone: 'Asia/Kolkata',
+      accentColor: '#3B82F6',
+      dashboardWidgets: ['dailyCompletion', 'currentStreak', 'habitsCompleted', 'tasksCompleted', 'productivity'],
+      lifeScoreWeights: { health: 30, learning: 25, productivity: 25, habits: 20 },
     });
+
 
     console.log('Creating habits...');
     const habitsData = [
@@ -75,7 +77,7 @@ async function seed() {
       { name: 'Code for 2 hours', type: 'timer', target: 120, unit: 'minutes', categoryId: getCategoryId('Productivity'), section: 'Work' },
     ];
     
-    const habits = await Habit.insertMany(habitsData.map(h => ({ ...h, active: true, frequency: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] })));
+    const habits = await Habit.insertMany(habitsData.map((h, i) => ({ ...h, active: true, frequency: 'daily', customDays: [], color: '#3B82F6', icon: 'check', order: i })));
 
     console.log('Creating habit logs for last 30 days...');
     const today = new Date();
@@ -121,9 +123,9 @@ async function seed() {
     console.log('Creating goals...');
     const deadline = new Date('2026-12-31T23:59:59.999Z');
     await Goal.insertMany([
-      { title: 'Reach 2000 Codeforces Rating', description: 'Practice everyday', target: 2000, current: 1580, unit: 'rating', deadline, categoryId: getCategoryId('Learning'), status: 'in-progress' },
-      { title: 'Read 20 Books This Year', description: 'Read a bit every night', target: 20, current: 7, unit: 'books', deadline, categoryId: getCategoryId('Learning'), status: 'in-progress' },
-      { title: 'Exercise 200 Days', description: 'Stay fit', target: 200, current: 85, unit: 'days', deadline, categoryId: getCategoryId('Fitness'), status: 'in-progress' },
+      { title: 'Reach 2000 Codeforces Rating', description: 'Practice everyday', target: 2000, currentValue: 1580, unit: 'rating', deadline, categoryId: getCategoryId('Learning'), status: 'active' },
+      { title: 'Read 20 Books This Year', description: 'Read a bit every night', target: 20, currentValue: 7, unit: 'books', deadline, categoryId: getCategoryId('Learning'), status: 'active' },
+      { title: 'Exercise 200 Days', description: 'Stay fit', target: 200, currentValue: 85, unit: 'days', deadline, categoryId: getCategoryId('Fitness'), status: 'active' },
     ]);
 
     console.log('Creating tasks...');
@@ -149,7 +151,7 @@ async function seed() {
         content: `Today was an interesting day. I focused on some long-term goals and felt pretty productive. ${Math.random() > 0.5 ? 'Learning new concepts in React was fun.' : 'Got slightly stuck on a DSA problem but figured it out eventually.'}`,
         date: date,
         tags: ['productivity', 'reflection', 'goals', 'learning'].sort(() => 0.5 - Math.random()).slice(0, 2),
-        mood: ['happy', 'neutral', 'excited', 'calm'][Math.floor(Math.random() * 4)]
+        mood: Math.floor(Math.random() * 3) + 3 // 3-5
       });
     }
     await JournalEntry.insertMany(journals);
@@ -222,8 +224,8 @@ async function seed() {
         const endTime = new Date(startTime.getTime() + duration * 60000);
         
         times.push({
-          description: activity.name,
-          categoryId: activity.category,
+          activity: activity.name,
+          category: activity.category,
           startTime: startTime,
           endTime: endTime,
           duration: duration,

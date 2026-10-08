@@ -37,19 +37,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'date and mood are required' }, { status: 400 });
     }
     
-    const parsedDate = parseISO(date);
+    const dateStr = date.split('T')[0];
     
-    // Upsert mood entry by date (one per day usually)
+    // Upsert mood entry by date (one per day)
     const entry = await MoodEntry.findOneAndUpdate(
-      { 
-        date: {
-          $gte: startOfDay(parsedDate),
-          $lte: endOfDay(parsedDate)
-        }
-      },
-      { date: parsedDate, mood, energy, stress, note, tags },
+      { date: dateStr },
+      { date: dateStr, mood, energy, stress, note },
       { new: true, upsert: true, runValidators: true }
     );
+
     
     return NextResponse.json({ success: true, data: entry }, { status: 201 });
   } catch (error) {

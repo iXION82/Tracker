@@ -61,7 +61,7 @@ export default function DailyProgressRing({
         />
       </svg>
       <div className="absolute flex flex-col items-center justify-center">
-        <span className="text-xl font-bold text-white">{formatPercentage(percentage)}</span>
+        <span className="text-xl font-bold text-white">{Math.round(percentage)}%</span>
         <span className="text-xs text-zinc-500">{completed} / {total} {label}</span>
       </div>
     </div>

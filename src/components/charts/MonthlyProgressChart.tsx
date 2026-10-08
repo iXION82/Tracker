@@ -19,7 +19,7 @@ export default function MonthlyProgressChart({ data }: MonthlyProgressChartProps
         <CardTitle className="text-sm font-medium text-zinc-400">Monthly Progress</CardTitle>
         <div className="text-right">
           <p className="text-2xl font-bold text-white">{totalCompleted} <span className="text-sm text-zinc-500 font-normal">/ {totalTarget}</span></p>
-          <p className="text-xs text-blue-400">{formatPercentage(percentage)} completed</p>
+          <p className="text-xs text-blue-400">{Math.round(percentage)}% completed</p>
         </div>
       </CardHeader>
       <CardContent>
@@ -55,7 +55,7 @@ export default function MonthlyProgressChart({ data }: MonthlyProgressChartProps
                   if (active && payload && payload.length) {
                     return (
                       <div className="bg-[#18181B] border border-white/10 p-2 rounded-md shadow-xl">
-                        <p className="text-white text-sm font-medium">{new Date(label).toLocaleDateString()}</p>
+                        <p className="text-white text-sm font-medium">{new Date(label ?? '').toLocaleDateString()}</p>
                         <p className="text-zinc-400 text-xs mt-1">
                           Completed: <span className="text-blue-400 font-bold">{payload[0].payload.completed}</span> / {payload[0].payload.total}
                         </p>

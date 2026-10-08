@@ -27,10 +27,8 @@ export default function GoalCard({ goal, onEdit, onDelete }: { goal: any, onEdit
             {goal.status}
           </Badge>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-white/5 -mt-1 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
+            <DropdownMenuTrigger className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-white/5 -mt-1 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
+              <MoreVertical className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-[#18181B] border-white/10 text-white">
               <DropdownMenuItem onClick={onEdit} className="hover:bg-white/5 cursor-pointer">

@@ -4,7 +4,10 @@ import Habit from '@/models/Habit';
 import GoalsList from '@/components/goals/GoalsList';
 import { IGoal } from '@/types';
 
+import { connection } from 'next/server';
+
 export default async function GoalsPage() {
+  await connection();
   await connectDB();
   
   // Fetch goals and habits

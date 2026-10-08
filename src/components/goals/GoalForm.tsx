@@ -127,7 +127,7 @@ export default function GoalForm({ open, onOpenChange, goal, habits, onSuccess }
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select value={formData.category} onValueChange={v => setFormData({...formData, category: v})}>
+              <Select value={formData.category} onValueChange={v => setFormData({...formData, category: v ?? ''})}>
                 <SelectTrigger className="bg-[#111113] border-white/10 text-white">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
@@ -138,7 +138,7 @@ export default function GoalForm({ open, onOpenChange, goal, habits, onSuccess }
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={formData.status} onValueChange={v => setFormData({...formData, status: v})}>
+              <Select value={formData.status} onValueChange={v => setFormData({...formData, status: v ?? ''})}>
                 <SelectTrigger className="bg-[#111113] border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>

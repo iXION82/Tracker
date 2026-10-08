@@ -112,7 +112,7 @@ export default function MonthlyGrid({ habits, logs, year, month }: MonthlyGridPr
 
           <div className="space-y-2">
             {habits.map(habit => (
-              <div key={habit.id || (habit as any)._id} className="flex items-center group">
+              <div key={habit._id} className="flex items-center group">
                 <div className="w-48 shrink-0 flex items-center gap-2 pr-4">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: habit.color || '#3b82f6' }} />
                   <span className="text-sm text-zinc-300 truncate group-hover:text-white transition-colors">{habit.name}</span>
@@ -120,7 +120,7 @@ export default function MonthlyGrid({ habits, logs, year, month }: MonthlyGridPr
                 <div className="flex flex-1">
                   {days.map(day => {
                     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const hid = habit.id || (habit as any)._id as string;
+                    const hid = habit._id as string;
                     const isCompleted = localLogs[hid]?.[dateStr]?.completed;
                     const isFuture = day > currentDay && currentDay !== -1;
                     

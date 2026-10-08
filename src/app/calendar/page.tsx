@@ -7,34 +7,37 @@ import MoodEntry from '@/models/MoodEntry';
 import SleepEntry from '@/models/SleepEntry';
 import TimeEntry from '@/models/TimeEntry';
 import Habit from '@/models/Habit';
+import { toDateString } from '@/lib/date-utils';
 
-export const dynamic = 'force-dynamic';
+import { connection } from 'next/server';
 
 export default async function CalendarPage() {
+  await connection();
   await connectDB();
 
-  // For this page, we fetch all relevant data and let the client component filter it by month/day
-  // In a real app we might want to fetch only the data for the requested month, but since it's a personal app,
-  // we can fetch a reasonable window or all recent data. For now, let's fetch everything or 3 months window.
-  
   const today = new Date();
   const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 2, 1);
   const nextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
 
-  const dateFilter = {
-    $gte: threeMonthsAgo,
-    $lte: nextMonth
-  };
+  const startStr = toDateString(threeMonthsAgo);
+  const endStr = toDateString(nextMonth);
 
   const habits = await Habit.find({}).lean();
-  const habitLogs = await HabitLog.find({ date: dateFilter }).lean();
-  const tasks = await Task.find({ dueDate: dateFilter }).lean();
-  const journalEntries = await JournalEntry.find({ date: dateFilter }).lean();
-  const moodEntries = await MoodEntry.find({ date: dateFilter }).lean();
-  const sleepEntries = await SleepEntry.find({ date: dateFilter }).lean();
-  
-  const timeEntries = await TimeEntry.find({ 
-    startTime: { $gte: threeMonthsAgo, $lte: nextMonth } 
+  const habitLogs = await HabitLog.find({
+    date: { $gte: startStr, $lte: endStr },
+  }).lean();
+  const tasks = await Task.find({}).lean();
+  const journalEntries = await JournalEntry.find({
+    date: { $gte: startStr, $lte: endStr },
+  }).lean();
+  const moodEntries = await MoodEntry.find({
+    date: { $gte: startStr, $lte: endStr },
+  }).lean();
+  const sleepEntries = await SleepEntry.find({
+    date: { $gte: startStr, $lte: endStr },
+  }).lean();
+  const timeEntries = await TimeEntry.find({
+    date: { $gte: startStr, $lte: endStr },
   }).lean();
 
   return (
@@ -44,7 +47,7 @@ export default async function CalendarPage() {
         <p className="text-zinc-400 mt-2">Your life at a glance</p>
       </div>
 
-      <CalendarView 
+      <CalendarView
         habits={JSON.parse(JSON.stringify(habits))}
         habitLogs={JSON.parse(JSON.stringify(habitLogs))}
         tasks={JSON.parse(JSON.stringify(tasks))}

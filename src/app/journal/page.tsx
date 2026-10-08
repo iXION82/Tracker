@@ -3,26 +3,23 @@ import JournalEntry from '@/models/JournalEntry';
 import MoodEntry from '@/models/MoodEntry';
 import JournalList from '@/components/journal/JournalList';
 import MoodOverview from '@/components/journal/MoodOverview';
+import { toDateString } from '@/lib/date-utils';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
-export const dynamic = 'force-dynamic';
+import { connection } from 'next/server';
 
 export default async function JournalPage() {
+  await connection();
   await connectDB();
-  
-  // Fetch journal entries
+
   const entries = await JournalEntry.find({}).sort({ date: -1 }).lean();
-  
-  // Fetch mood entries for current month
+
   const today = new Date();
-  const start = startOfMonth(today);
-  const end = endOfMonth(today);
-  
+  const startStr = toDateString(startOfMonth(today));
+  const endStr = toDateString(endOfMonth(today));
+
   const moodEntries = await MoodEntry.find({
-    date: {
-      $gte: start,
-      $lte: end
-    }
+    date: { $gte: startStr, $lte: endStr },
   }).lean();
 
   const journalEntries = JSON.parse(JSON.stringify(entries));

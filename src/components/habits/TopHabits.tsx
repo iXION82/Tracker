@@ -18,7 +18,7 @@ export default function TopHabits({ habits }: TopHabitsProps) {
     <Card className="w-full bg-[#111113] border-white/5 h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-zinc-400">Top Habits</CardTitle>
-        <Select value={period} onValueChange={setPeriod}>
+        <Select value={period} onValueChange={(value) => value && setPeriod(value)}>
           <SelectTrigger className="w-[120px] h-8 text-xs bg-[#18181B] border-white/10 text-white">
             <SelectValue placeholder="Period" />
           </SelectTrigger>
@@ -47,7 +47,7 @@ export default function TopHabits({ habits }: TopHabitsProps) {
                   </div>
                 </div>
                 <span className="text-sm font-medium" style={{ color: habit.color }}>
-                  {formatPercentage(habit.completionRate * 100)}
+                  {Math.round(habit.completionRate * 100)}%
                 </span>
               </div>
             ))

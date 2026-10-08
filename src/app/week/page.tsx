@@ -22,15 +22,18 @@ async function getWeeklyData() {
   endOfWeek.setDate(startOfWeek.getDate() + 6);
   endOfWeek.setHours(23, 59, 59, 999);
 
-  const habits = await Habit.find({ isActive: true }).lean();
+  const habits = await Habit.find({ active: true }).lean();
   const logs = await HabitLog.find({
-    date: { $gte: startOfWeek, $lte: endOfWeek }
+    date: { 
+      $gte: startOfWeek.toISOString().split('T')[0], 
+      $lte: endOfWeek.toISOString().split('T')[0] 
+    }
   }).lean();
 
   const formattedLogs: Record<string, Record<string, any>> = {};
   logs.forEach((log: any) => {
     const hid = log.habitId.toString();
-    const dStr = log.date.toISOString().split('T')[0];
+    const dStr = log.date;
     if (!formattedLogs[hid]) formattedLogs[hid] = {};
     formattedLogs[hid][dStr] = log;
   });
@@ -54,7 +57,10 @@ async function getWeeklyData() {
   };
 }
 
+import { connection } from 'next/server';
+
 export default async function WeekPage() {
+  await connection();
   const data = await getWeeklyData();
 
   return (

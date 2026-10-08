@@ -48,9 +48,9 @@ export default function CompletionChart({ data }: CompletionChartProps) {
                   if (active && payload && payload.length) {
                     return (
                       <div className="bg-[#18181B] border border-white/10 p-2 rounded-md shadow-xl">
-                        <p className="text-white text-sm">{new Date(label).toLocaleDateString()}</p>
+                        <p className="text-white text-sm">{new Date(label ?? '').toLocaleDateString()}</p>
                         <p className="text-emerald-400 font-bold mt-1">
-                          {formatPercentage(payload[0].value as number)}
+                          {Math.round(payload[0].value as number)}%
                         </p>
                       </div>
                     );

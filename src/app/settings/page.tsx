@@ -2,29 +2,35 @@ import connectDB from '@/lib/db';
 import UserSettings from '@/models/UserSettings';
 import SettingsForm from '@/components/settings/SettingsForm';
 
-export const dynamic = 'force-dynamic';
+import { connection } from 'next/server';
 
 export default async function SettingsPage() {
+  await connection();
   await connectDB();
-  
+
   let settings = await UserSettings.findOne({}).lean();
-  
+
   if (!settings) {
-    settings = {
+    // Create default settings
+    const created = await UserSettings.create({
+      name: 'User',
       theme: 'dark',
-      dashboardWidgets: {
-        habits: true,
-        tasks: true,
-        mood: true,
-        time: true
-      },
+      accentColor: '#3B82F6',
+      dashboardWidgets: [
+        'dailyCompletion',
+        'currentStreak',
+        'habitsCompleted',
+        'tasksCompleted',
+        'productivity',
+      ],
       lifeScoreWeights: {
-        health: 25,
+        health: 30,
+        learning: 25,
         productivity: 25,
-        mindfulness: 25,
-        learning: 25
-      }
-    };
+        habits: 20,
+      },
+    });
+    settings = created.toObject();
   }
 
   return (

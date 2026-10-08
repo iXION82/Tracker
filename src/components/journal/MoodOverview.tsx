@@ -35,7 +35,7 @@ export default function MoodOverview({ moodEntries }: MoodOverviewProps) {
           <div className="bg-[#18181B] p-4 rounded-xl border border-white/5 flex flex-col items-center">
             <span className="text-zinc-400 text-sm mb-1">Average Mood</span>
             <div className="text-3xl font-semibold text-white flex items-center gap-2">
-              {avgMood > 0 ? MOOD_EMOJIS[Math.round(avgMood) as keyof typeof MOOD_EMOJIS] : '-'}
+              {avgMood > 0 ? MOOD_EMOJIS[Math.round(avgMood) as keyof typeof MOOD_EMOJIS]?.emoji : '-'}
               <span className="text-xl">{avgMood > 0 ? avgMood.toFixed(1) : '-'}</span>
             </div>
           </div>
@@ -65,7 +65,7 @@ export default function MoodOverview({ moodEntries }: MoodOverviewProps) {
                   className="aspect-square rounded-md bg-[#18181B] border border-white/5 flex items-center justify-center text-lg"
                   title={format(date, 'MMM d, yyyy')}
                 >
-                  {entry ? MOOD_EMOJIS[entry.mood as keyof typeof MOOD_EMOJIS] : ''}
+                  {entry ? MOOD_EMOJIS[entry.mood as keyof typeof MOOD_EMOJIS]?.emoji : ''}
                 </div>
               );
             })}
@@ -78,7 +78,7 @@ export default function MoodOverview({ moodEntries }: MoodOverviewProps) {
           <div className="space-y-2">
             {moodCounts.reverse().map(({ level, count }) => (
               <div key={level} className="flex items-center gap-3 text-sm">
-                <span className="text-lg w-6">{MOOD_EMOJIS[level as keyof typeof MOOD_EMOJIS]}</span>
+                <span className="text-lg w-6">{MOOD_EMOJIS[level as keyof typeof MOOD_EMOJIS]?.emoji}</span>
                 <div className="flex-1 h-2 bg-[#18181B] rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-blue-500 rounded-full" 

@@ -102,8 +102,8 @@ export function Sidebar() {
 
           if (isCollapsed) {
             return (
-              <Tooltip key={item.href} delayDuration={0}>
-                <TooltipTrigger asChild>
+              <Tooltip key={item.href}>
+                <TooltipTrigger>
                   <div><NavLink /></div>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="ml-2 bg-popover border-border">
@@ -119,8 +119,8 @@ export function Sidebar() {
 
       <div className="p-3 mt-auto">
         {isCollapsed ? (
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
+          <Tooltip>
+            <TooltipTrigger>
               <Link href="/settings" className="flex items-center justify-center rounded-lg p-2.5 text-zinc-400 hover:text-foreground hover:bg-white/5 transition-colors">
                 <Settings className="h-5 w-5 flex-shrink-0" />
               </Link>

@@ -8,43 +8,41 @@ import TodayHabits from '@/components/dashboard/TodayHabits';
 import TodayTasks from '@/components/dashboard/TodayTasks';
 import LifeScoreWidget from '@/components/dashboard/LifeScoreWidget';
 import HabitForm from '@/components/habits/HabitForm';
+import { getTodayString } from '@/lib/date-utils';
 
-const serialize = (obj: any) => JSON.parse(JSON.stringify(obj));
+const serialize = (obj: unknown) => JSON.parse(JSON.stringify(obj));
+
+import { connection } from 'next/server';
 
 export default async function DashboardPage() {
+  await connection();
   await connectDB();
 
-  let settings = await UserSettings.findOne({});
-  if (!settings) {
-    settings = { name: 'User' };
-  }
+  const settings = await UserSettings.findOne({}).lean();
+  const userName = settings?.name ?? 'User';
 
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  
-  const endOfDay = new Date();
-  endOfDay.setHours(23, 59, 59, 999);
+  const todayStr = getTodayString();
 
   const habits = await Habit.find({ active: true }).lean();
-  const tasks = await Task.find({
-    dueDate: { $gte: startOfDay, $lte: endOfDay }
-  }).lean();
-  
-  const habitLogs = await HabitLog.find({
-    date: { $gte: startOfDay, $lte: endOfDay }
-  }).lean();
+  const tasks = await Task.find({}).lean();
+  const todayTasks = tasks.filter(t => {
+    if (!t.dueDate) return false;
+    return t.dueDate.toISOString().split('T')[0] === todayStr;
+  });
+
+  const habitLogs = await HabitLog.find({ date: todayStr }).lean();
 
   const habitsTotal = habits.length;
   const habitsCompleted = habitLogs.filter(log => log.completed).length;
-  const tasksTotal = tasks.length;
-  const tasksCompleted = tasks.filter(t => t.completed).length;
+  const tasksTotal = todayTasks.length;
+  const tasksCompleted = todayTasks.filter(t => t.completed).length;
 
   const totalItems = habitsTotal + tasksTotal;
   const completedItems = habitsCompleted + tasksCompleted;
-  const dailyCompletion = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
-  
+  const dailyCompletion = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
   const productivity = dailyCompletion;
-  const currentStreak = 12; // Mock for now
+  const currentStreak = 0;
 
   const stats = {
     dailyCompletion,
@@ -53,21 +51,24 @@ export default async function DashboardPage() {
     habitsTotal,
     tasksCompleted,
     tasksTotal,
-    productivity
+    productivity,
   };
 
   const lifeScoreBreakdown = [
-    { category: 'Health', score: 85, weight: 1, color: '#22c55e' },
-    { category: 'Work', score: 70, weight: 1, color: '#3b82f6' },
-    { category: 'Mind', score: 90, weight: 1, color: '#8b5cf6' },
-    { category: 'Social', score: 60, weight: 1, color: '#f59e0b' },
+    { category: 'Health', score: 85, weight: 30, color: '#10B981' },
+    { category: 'Learning', score: 70, weight: 25, color: '#8B5CF6' },
+    { category: 'Productivity', score: 90, weight: 25, color: '#3B82F6' },
+    { category: 'Habits', score: dailyCompletion, weight: 20, color: '#F59E0B' },
   ];
-  const lifeScore = 76;
+  const lifeScore = Math.round(
+    lifeScoreBreakdown.reduce((acc, b) => acc + b.score * b.weight, 0) /
+    lifeScoreBreakdown.reduce((acc, b) => acc + b.weight, 0)
+  );
 
   const formattedDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   });
 
   return (
@@ -75,11 +76,9 @@ export default async function DashboardPage() {
       <header className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
-            Good morning, {settings.name}
+            Good morning, {userName}
           </h1>
-          <p className="text-zinc-400">
-            {formattedDate}
-          </p>
+          <p className="text-zinc-400">{formattedDate}</p>
         </div>
         <div className="flex items-center gap-3">
           <HabitForm />
@@ -91,23 +90,20 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <section>
-            <TodayHabits 
-              initialHabits={serialize(habits)} 
-              initialLogs={serialize(habitLogs)} 
+            <TodayHabits
+              initialHabits={serialize(habits)}
+              initialLogs={serialize(habitLogs)}
             />
           </section>
         </div>
 
         <div className="space-y-8">
           <section>
-            <LifeScoreWidget 
-              score={lifeScore} 
-              breakdown={lifeScoreBreakdown} 
-            />
+            <LifeScoreWidget score={lifeScore} breakdown={lifeScoreBreakdown} />
           </section>
-          
+
           <section>
-            <TodayTasks initialTasks={serialize(tasks)} />
+            <TodayTasks initialTasks={serialize(todayTasks)} />
           </section>
         </div>
       </div>

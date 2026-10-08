@@ -17,19 +17,22 @@ async function getTrackerData() {
   const year = date.getFullYear();
   const month = date.getMonth() + 1; // 1-12
   
-  const habits = await Habit.find({ isActive: true }).lean() as any[];
+  const habits = await Habit.find({ active: true }).lean() as any[];
   
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59);
   
   const logs = await HabitLog.find({
-    date: { $gte: startDate, $lte: endDate }
+    date: { 
+      $gte: startDate.toISOString().split('T')[0], 
+      $lte: endDate.toISOString().split('T')[0] 
+    }
   }).lean();
 
   const formattedLogs: Record<string, any> = {};
   logs.forEach((log: any) => {
     const habitId = log.habitId.toString();
-    const dateStr = log.date.toISOString().split('T')[0];
+    const dateStr = log.date;
     if (!formattedLogs[habitId]) formattedLogs[habitId] = {};
     formattedLogs[habitId][dateStr] = log;
   });
@@ -78,7 +81,10 @@ async function getTrackerData() {
   };
 }
 
+import { connection } from 'next/server';
+
 export default async function TrackerPage() {
+  await connection();
   const data = await getTrackerData();
 
   return (

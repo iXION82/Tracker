@@ -180,7 +180,7 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                   value={[value as number]}
                   max={100}
                   step={5}
-                  onValueChange={(v) => handleWeightChange(key, v)}
+                  onValueChange={(v) => { const val = Array.isArray(v) ? v : [v]; handleWeightChange(key, val as number[]); }}
                   className="py-2"
                 />
               </div>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import React, { Suspense } from 'react';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -29,7 +30,9 @@ export default function RootLayout({
           <main className="flex-1 overflow-auto flex flex-col min-h-screen relative">
             <Header />
             <div className="flex-1 pb-16 md:pb-0">
-              {children}
+              <Suspense fallback={<div className="flex h-full items-center justify-center text-zinc-500">Loading LifeOS...</div>}>
+                {children}
+              </Suspense>
             </div>
             <MobileNav />
           </main>

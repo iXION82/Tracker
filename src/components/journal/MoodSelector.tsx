@@ -11,11 +11,11 @@ interface MoodSelectorProps {
 
 export default function MoodSelector({ value, onChange, showLabels }: MoodSelectorProps) {
   const moods = [
-    { level: 1, label: 'Terrible', emoji: MOOD_EMOJIS[1] || '😞' },
-    { level: 2, label: 'Bad', emoji: MOOD_EMOJIS[2] || '😔' },
-    { level: 3, label: 'Okay', emoji: MOOD_EMOJIS[3] || '😐' },
-    { level: 4, label: 'Good', emoji: MOOD_EMOJIS[4] || '🙂' },
-    { level: 5, label: 'Great', emoji: MOOD_EMOJIS[5] || '😄' },
+    { level: 1, label: 'Terrible', emoji: MOOD_EMOJIS[1]?.emoji || '😞' },
+    { level: 2, label: 'Bad', emoji: MOOD_EMOJIS[2]?.emoji || '😔' },
+    { level: 3, label: 'Okay', emoji: MOOD_EMOJIS[3]?.emoji || '😐' },
+    { level: 4, label: 'Good', emoji: MOOD_EMOJIS[4]?.emoji || '🙂' },
+    { level: 5, label: 'Great', emoji: MOOD_EMOJIS[5]?.emoji || '😄' },
   ];
 
   return (
