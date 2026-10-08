@@ -8,23 +8,24 @@ export async function GET() {
   try {
     await connectDB();
     const today = getTodayString();
-    
+
     // Fetch today's windows
     const windows = await DailyTimeWindow.find({ date: today }).lean();
-    
-    const formattedWindows = {
+
+    const formattedWindows: Record<string, { hours: number; mood?: string; note?: string }> = {
       morning: { hours: 0 },
       afternoon: { hours: 0 },
       evening: { hours: 0 },
       night: { hours: 0 }
     };
-    
+
     windows.forEach((w: any) => {
-      if (formattedWindows[w.window as keyof typeof formattedWindows]) {
-        formattedWindows[w.window as keyof typeof formattedWindows] = {
+      const key = w.window as string;
+      if (key in formattedWindows) {
+        formattedWindows[key] = {
           hours: w.productiveHours || 0,
-          mood: w.mood,
-          note: w.note
+          mood: w.mood || undefined,
+          note: w.note || undefined
         };
       }
     });
@@ -40,7 +41,7 @@ export async function GET() {
       data: {
         windows: formattedWindows,
         stats: {
-          goalHours: 10, // Could fetch from settings later
+          goalHours: 10,
           totalHours,
           tenHourStreak,
           onePercentStreak,

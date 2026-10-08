@@ -11,11 +11,11 @@ import {
   Target, 
   ListTodo, 
   BarChart3, 
-  BookOpen, 
   Settings,
   ChevronLeft,
   ChevronRight,
-  Activity
+  Activity,
+  ShieldAlert
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -23,13 +23,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/today', label: 'Today', icon: CalendarCheck },
   { href: '/tracker', label: 'Tracker', icon: Grid3X3 },
-  { href: '/calendar', label: 'Calendar', icon: Calendar },
+  { href: '/my', label: 'My', icon: Activity },
   { href: '/goals', label: 'Goals', icon: Target },
-  { href: '/tasks', label: 'Tasks', icon: ListTodo },
+  { href: '/bad-habits', label: 'Bad Habits', icon: ShieldAlert },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/journal', label: 'Journal', icon: BookOpen },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function Sidebar() {

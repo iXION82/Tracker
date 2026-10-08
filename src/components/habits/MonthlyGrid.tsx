@@ -1,20 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { IHabit } from '@/types';
 import { Card } from '@/components/ui/card';
+import HabitForm from '@/components/habits/HabitForm';
 
 interface MonthlyGridProps {
   habits: IHabit[];
   logs: Record<string, Record<string, any>>;
   year: number;
   month: number;
+  onToggle: (habitId: string, day: number) => void;
+  onHabitUpdate?: () => void;
 }
 
-export default function MonthlyGrid({ habits, logs, year, month }: MonthlyGridProps) {
-  const [localLogs, setLocalLogs] = useState(logs);
+export default function MonthlyGrid({ habits, logs, year, month, onToggle, onHabitUpdate }: MonthlyGridProps) {
   const daysInMonth = new Date(year, month, 0).getDate();
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const today = new Date();
@@ -28,40 +28,6 @@ export default function MonthlyGrid({ habits, logs, year, month }: MonthlyGridPr
       case 3: return 'bg-blue-500/10 text-blue-500';
       case 4: return 'bg-purple-500/10 text-purple-500';
       default: return 'bg-pink-500/10 text-pink-500';
-    }
-  };
-
-  const handleToggle = async (habitId: string, day: number) => {
-    if (day > currentDay && currentDay !== -1) return; // Future date
-    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const currentLog = localLogs[habitId]?.[dateStr];
-    const newStatus = currentLog?.completed ? false : true;
-
-    setLocalLogs(prev => ({
-      ...prev,
-      [habitId]: {
-        ...prev[habitId],
-        [dateStr]: { ...currentLog, completed: newStatus }
-      }
-    }));
-
-    try {
-      const res = await fetch('/api/habits/logs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ habitId, date: dateStr, completed: newStatus })
-      });
-      if (!res.ok) throw new Error('Failed to update log');
-      toast.success(newStatus ? 'Habit completed!' : 'Habit uncompleted');
-    } catch (err) {
-      toast.error('Failed to save progress');
-      setLocalLogs(prev => ({
-        ...prev,
-        [habitId]: {
-          ...prev[habitId],
-          [dateStr]: { ...currentLog, completed: !newStatus }
-        }
-      }));
     }
   };
 
@@ -112,22 +78,31 @@ export default function MonthlyGrid({ habits, logs, year, month }: MonthlyGridPr
 
           <div className="space-y-2">
             {habits.map(habit => (
-              <div key={habit._id} className="flex items-center group">
-                <div className="w-48 shrink-0 flex items-center gap-2 pr-4">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: habit.color || '#3b82f6' }} />
-                  <span className="text-sm text-zinc-300 truncate group-hover:text-white transition-colors">{habit.name}</span>
+              <div key={habit._id as string} className="flex items-center group">
+                <div className="w-48 shrink-0 flex items-center gap-2 pr-4 justify-between">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: habit.color || '#3b82f6' }} />
+                    <span className="text-sm text-zinc-300 truncate group-hover:text-white transition-colors">{habit.name}</span>
+                  </div>
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <HabitForm habit={habit} onSuccess={onHabitUpdate} />
+                  </div>
                 </div>
                 <div className="flex flex-1">
                   {days.map(day => {
                     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                     const hid = habit._id as string;
-                    const isCompleted = localLogs[hid]?.[dateStr]?.completed;
+                    const isCompleted = logs[hid]?.[dateStr]?.completed;
                     const isFuture = day > currentDay && currentDay !== -1;
                     
                     return (
                       <button
                         key={`${hid}-${day}`}
-                        onClick={() => handleToggle(hid, day)}
+                        onClick={() => {
+                          if (!isFuture) {
+                            onToggle(hid, day);
+                          }
+                        }}
                         disabled={isFuture}
                         className={cn(
                           "w-8 h-8 rounded mx-[2px] flex items-center justify-center transition-all",

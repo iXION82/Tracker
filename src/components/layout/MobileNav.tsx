@@ -2,15 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, CalendarCheck, Grid3X3, BarChart3, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, Grid3X3, BarChart3, Activity, ShieldAlert, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Dash', icon: LayoutDashboard },
-  { href: '/today', label: 'Today', icon: CalendarCheck },
   { href: '/tracker', label: 'Tracker', icon: Grid3X3 },
-  { href: '/analytics', label: 'Stats', icon: BarChart3 },
-  { href: '/settings', label: 'More', icon: MoreHorizontal },
+  { href: '/my', label: 'My', icon: Activity },
+  { href: '/bad-habits', label: 'Bad Habits', icon: ShieldAlert },
+  { href: '/settings', label: 'More', icon: Settings },
 ];
 
 export function MobileNav() {

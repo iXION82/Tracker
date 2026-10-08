@@ -1,20 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { TimeWindowCard } from "@/components/dashboard-v2/TimeWindowCard";
 import { ProductivitySummary } from "@/components/dashboard-v2/ProductivitySummary";
 import { TimelineVisualizer } from "@/components/dashboard-v2/TimelineVisualizer";
 import { TimeWindow, getQuote, MoodType } from "@/components/dashboard-v2/constants";
 import { toast } from "sonner";
 
+type WindowData = { hours: number; mood?: MoodType; note?: string };
+
 export default function DashboardClient() {
-  const [data, setData] = useState<Record<TimeWindow, { hours: number, mood?: MoodType, note?: string }>>({
+  const [data, setData] = useState<Record<TimeWindow, WindowData>>({
     morning: { hours: 0 },
     afternoon: { hours: 0 },
     evening: { hours: 0 },
     night: { hours: 0 }
   });
-  
+
   const [stats, setStats] = useState({
     goalHours: 10,
     tenHourStreak: 0,
@@ -22,15 +24,10 @@ export default function DashboardClient() {
     longSessionStreak: 0
   });
 
-  const [quote, setQuote] = useState("");
+  const [quote] = useState(() => getQuote());
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    setQuote(getQuote());
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const res = await fetch('/api/dashboard');
       if (res.ok) {
@@ -45,34 +42,38 @@ export default function DashboardClient() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const handleUpdate = async (window: TimeWindow, windowData: { hours: number, mood?: MoodType, note?: string }) => {
-    // Optimistic UI update
-    setData(prev => ({ ...prev, [window]: windowData }));
-    
-    // Save to API
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const handleUpdate = async (windowName: TimeWindow, windowData: WindowData) => {
+    // Save previous for rollback
+    const prev = { ...data };
+
+    // Optimistic UI
+    setData(d => ({ ...d, [windowName]: windowData }));
+
     try {
       const res = await fetch('/api/dashboard/window', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ window, ...windowData })
+        body: JSON.stringify({ window: windowName, ...windowData })
       });
-      
-      if (!res.ok) {
-        throw new Error('Failed to save');
-      }
-      
-      // Refresh stats after save (streak recalculations might happen)
+
+      if (!res.ok) throw new Error('Failed to save');
+
+      // Refresh stats
       const statsRes = await fetch('/api/dashboard/stats');
       if (statsRes.ok) {
         const statsJson = await statsRes.json();
-        setStats(statsJson.data);
+        if (statsJson.data) setStats(statsJson.data);
       }
-      
-    } catch (error) {
-      toast.error("Failed to save " + window + " window");
-      // Could rollback here if needed
+    } catch {
+      // Rollback
+      setData(prev);
+      toast.error("Failed to save " + windowName + " data");
     }
   };
 
@@ -83,15 +84,13 @@ export default function DashboardClient() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] text-white p-6 md:p-10 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-[#0A0A0B] text-white p-6 md:p-10 w-full max-w-[1400px] mx-auto">
       <header className="mb-10">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
-          Dashboard
-        </h1>
-        <p className="text-zinc-400 italic">"{quote}"</p>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">Dashboard</h1>
+        <p className="text-zinc-500 text-sm italic">&ldquo;{quote}&rdquo;</p>
       </header>
 
-      <ProductivitySummary 
+      <ProductivitySummary
         totalHours={totalHours}
         goalHours={stats.goalHours}
         tenHourStreak={stats.tenHourStreak}
@@ -99,38 +98,26 @@ export default function DashboardClient() {
         longSessionStreak={stats.longSessionStreak}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <TimeWindowCard 
-          window="morning" 
-          initialHours={data.morning.hours}
-          initialMood={data.morning.mood}
-          initialNote={data.morning.note}
-          onUpdate={(d) => handleUpdate("morning", d)}
-        />
-        <TimeWindowCard 
-          window="afternoon" 
-          initialHours={data.afternoon.hours}
-          initialMood={data.afternoon.mood}
-          initialNote={data.afternoon.note}
-          onUpdate={(d) => handleUpdate("afternoon", d)}
-        />
-        <TimeWindowCard 
-          window="evening" 
-          initialHours={data.evening.hours}
-          initialMood={data.evening.mood}
-          initialNote={data.evening.note}
-          onUpdate={(d) => handleUpdate("evening", d)}
-        />
-        <TimeWindowCard 
-          window="night" 
-          initialHours={data.night.hours}
-          initialMood={data.night.mood}
-          initialNote={data.night.note}
-          onUpdate={(d) => handleUpdate("night", d)}
-        />
-      </div>
+      <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+        <div className="flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+            {(['morning', 'afternoon', 'evening', 'night'] as TimeWindow[]).map(w => (
+              <TimeWindowCard
+                key={w}
+                window={w}
+                initialHours={data[w].hours}
+                initialMood={data[w].mood}
+                initialNote={data[w].note}
+                onUpdate={(d) => handleUpdate(w, d)}
+              />
+            ))}
+          </div>
+        </div>
 
-      <TimelineVisualizer windows={data} />
+        <div className="lg:w-80 shrink-0">
+          <TimelineVisualizer windows={data} />
+        </div>
+      </div>
     </div>
   );
 }

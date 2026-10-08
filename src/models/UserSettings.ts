@@ -16,7 +16,7 @@ export interface IUserSettingsDocument {
   integrations?: {
     githubUsername?: string;
     leetcodeUsername?: string;
-    wakatimeApiKey?: string;
+    codeforcesUsername?: string;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -50,7 +50,7 @@ const UserSettingsSchema = new Schema<IUserSettingsDocument>(
     integrations: {
       githubUsername: { type: String },
       leetcodeUsername: { type: String },
-      wakatimeApiKey: { type: String },
+      codeforcesUsername: { type: String },
     },
   },
   { timestamps: true }
