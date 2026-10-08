@@ -13,6 +13,11 @@ export interface IUserSettingsDocument {
     habits: number;
     [key: string]: number;
   };
+  integrations?: {
+    githubUsername?: string;
+    leetcodeUsername?: string;
+    wakatimeApiKey?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +46,11 @@ const UserSettingsSchema = new Schema<IUserSettingsDocument>(
         productivity: 25,
         habits: 20,
       },
+    },
+    integrations: {
+      githubUsername: { type: String },
+      leetcodeUsername: { type: String },
+      wakatimeApiKey: { type: String },
     },
   },
   { timestamps: true }
