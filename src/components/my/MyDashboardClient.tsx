@@ -158,6 +158,64 @@ export default function MyDashboardClient({ initialData }: { initialData: any })
   const totalScreen = phoneMins + pcMins;
   const activeWindows = initialData.windows?.filter((w: any) => w.productiveHours > 0).length || 0;
 
+  // ── 24-Hour Budget ──
+  const phoneHrs = phoneMins / 60;
+  const pcHrs = pcMins / 60;
+  const totalAllocated = totalProd + data.unproductiveHours + data.sleepDuration + phoneHrs + pcHrs;
+  const remaining = Math.round((24 - totalAllocated) * 10) / 10;
+  const overBudget = totalAllocated > 24;
+  const budgetPct = clamp((totalAllocated / 24) * 100, 0, 100);
+
+  // Budget-aware update: cap the new value so total doesn't exceed 24h
+  const budgetUpdate = (field: string, newVal: number, unitIsMinutes = false) => {
+    // Calculate what the OTHER fields currently contribute in hours
+    const currentFieldHrs = (() => {
+      switch (field) {
+        case 'unproductiveHours': return data.unproductiveHours;
+        case 'sleepDuration': return data.sleepDuration;
+        case 'phoneHours': return phoneMins / 60;
+        case 'phoneMinutes': return phoneMins / 60;
+        case 'pcHours': return pcMins / 60;
+        case 'pcMinutes': return pcMins / 60;
+        default: return 0;
+      }
+    })();
+
+    let newFieldHrs: number;
+    if (field === 'phoneHours') {
+      newFieldHrs = newVal + data.phoneMinutes / 60;
+    } else if (field === 'phoneMinutes') {
+      newFieldHrs = data.phoneHours + newVal / 60;
+    } else if (field === 'pcHours') {
+      newFieldHrs = newVal + data.pcMinutes / 60;
+    } else if (field === 'pcMinutes') {
+      newFieldHrs = data.pcHours + newVal / 60;
+    } else {
+      newFieldHrs = newVal;
+    }
+
+    const othersTotal = totalAllocated - currentFieldHrs;
+    const maxAllowed = 24 - othersTotal;
+
+    if (newFieldHrs > maxAllowed) {
+      // Cap the value
+      if (field === 'phoneHours') {
+        newVal = Math.max(0, Math.floor(maxAllowed - data.phoneMinutes / 60));
+      } else if (field === 'phoneMinutes') {
+        newVal = Math.max(0, Math.floor((maxAllowed - data.phoneHours) * 60));
+      } else if (field === 'pcHours') {
+        newVal = Math.max(0, Math.floor(maxAllowed - data.pcMinutes / 60));
+      } else if (field === 'pcMinutes') {
+        newVal = Math.max(0, Math.floor((maxAllowed - data.pcHours) * 60));
+      } else {
+        newVal = Math.max(0, Math.round(maxAllowed * 10) / 10);
+      }
+      toast.error("Can't exceed 24 hours total");
+    }
+
+    update(field, newVal);
+  };
+
   const dayScore = useMemo(() => {
     let s = 0;
     s += clamp(totalProd / 10, 0, 1) * 40;
@@ -171,6 +229,16 @@ export default function MyDashboardClient({ initialData }: { initialData: any })
 
   const scoreColor = dayScore >= 80 ? 'text-emerald-400' : dayScore >= 60 ? 'text-blue-400' : dayScore >= 40 ? 'text-yellow-400' : 'text-red-400';
   const scoreRing = dayScore >= 80 ? 'stroke-emerald-500' : dayScore >= 60 ? 'stroke-blue-500' : dayScore >= 40 ? 'stroke-yellow-500' : 'stroke-red-500';
+
+  // Budget bar segments
+  const segments = [
+    { label: 'Productive', hours: totalProd, color: 'bg-blue-500/80' },
+    { label: 'Sleep', hours: data.sleepDuration, color: 'bg-indigo-500/80' },
+    { label: 'Phone', hours: phoneHrs, color: 'bg-pink-500/80' },
+    { label: 'PC', hours: pcHrs, color: 'bg-cyan-500/80' },
+    { label: 'Wasted', hours: data.unproductiveHours, color: 'bg-orange-500/80' },
+  ].filter(s => s.hours > 0);
+  const freeHours = Math.max(0, Math.round((24 - totalAllocated) * 10) / 10);
 
   return (
     <div className="space-y-4">
@@ -292,7 +360,7 @@ export default function MyDashboardClient({ initialData }: { initialData: any })
               <PillSelector 
                 options={[4, 5, 5.5, 6, 6.5, 7, 7.5, 8, 9, 10]} 
                 value={data.sleepDuration} 
-                onChange={v => update('sleepDuration', v)} 
+                onChange={v => budgetUpdate('sleepDuration', v)} 
                 color="bg-indigo-600" 
               />
             </div>
@@ -322,12 +390,12 @@ export default function MyDashboardClient({ initialData }: { initialData: any })
             <h3 className="text-sm font-semibold text-white">Wasted Time</h3>
           </div>
           <div className="flex justify-center mb-4">
-            <Stepper value={data.unproductiveHours} onChange={v => update('unproductiveHours', v)} max={16} step={0.5} unit="h" color="text-orange-400" large />
+            <Stepper value={data.unproductiveHours} onChange={v => budgetUpdate('unproductiveHours', v)} max={16} step={0.5} unit="h" color="text-orange-400" large />
           </div>
           <PillSelector 
             options={[0, 0.5, 1, 1.5, 2, 3, 4, 5]} 
             value={data.unproductiveHours} 
-            onChange={v => update('unproductiveHours', v)} 
+            onChange={v => budgetUpdate('unproductiveHours', v)} 
             color="bg-orange-600" 
           />
           <div className="mt-4 p-3 rounded-lg bg-[#0e0e10] border border-white/[0.03]">
@@ -363,8 +431,8 @@ export default function MyDashboardClient({ initialData }: { initialData: any })
               <span className="text-xs text-zinc-600 tabular-nums">{fmtDuration(phoneMins)}</span>
             </div>
             <div className="flex gap-2 items-center">
-              <Stepper value={data.phoneHours} onChange={v => update('phoneHours', v)} max={16} unit="h" color="text-pink-400" />
-              <PillSelector options={[0, 15, 30, 45]} value={data.phoneMinutes} onChange={v => update('phoneMinutes', v)} color="bg-pink-600" />
+              <Stepper value={data.phoneHours} onChange={v => budgetUpdate('phoneHours', v)} max={16} unit="h" color="text-pink-400" />
+              <PillSelector options={[0, 15, 30, 45]} value={data.phoneMinutes} onChange={v => budgetUpdate('phoneMinutes', v)} color="bg-pink-600" />
             </div>
             <div className="mt-2">
               <SliderBar value={phoneMins} max={480} color="bg-gradient-to-r from-pink-600 to-pink-400" />
@@ -380,8 +448,8 @@ export default function MyDashboardClient({ initialData }: { initialData: any })
               <span className="text-xs text-zinc-600 tabular-nums">{fmtDuration(pcMins)}</span>
             </div>
             <div className="flex gap-2 items-center">
-              <Stepper value={data.pcHours} onChange={v => update('pcHours', v)} max={16} unit="h" color="text-cyan-400" />
-              <PillSelector options={[0, 15, 30, 45]} value={data.pcMinutes} onChange={v => update('pcMinutes', v)} color="bg-cyan-600" />
+              <Stepper value={data.pcHours} onChange={v => budgetUpdate('pcHours', v)} max={16} unit="h" color="text-cyan-400" />
+              <PillSelector options={[0, 15, 30, 45]} value={data.pcMinutes} onChange={v => budgetUpdate('pcMinutes', v)} color="bg-cyan-600" />
             </div>
             <div className="mt-2">
               <SliderBar value={pcMins} max={480} color="bg-gradient-to-r from-cyan-600 to-cyan-400" />
@@ -446,33 +514,45 @@ export default function MyDashboardClient({ initialData }: { initialData: any })
         </Card>
       </div>
 
-      {/* ══════ ROW 4: 16-Hour Breakdown ══════ */}
-      <Card className="bg-[#111113] border-white/5 p-6 hover:border-white/10 transition-all">
+      {/* ══════ ROW 4: 24-Hour Unified Breakdown ══════ */}
+      <Card className={`bg-[#111113] border-white/5 p-6 hover:border-white/10 transition-all ${overBudget ? 'border-red-500/30' : ''}`}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[10px] text-zinc-500 uppercase tracking-widest font-medium">16-Hour Day Breakdown</h3>
-          <span className="text-[10px] text-zinc-600">{Math.round((totalProd / 16) * 100)}% tracked productive</span>
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-zinc-400" />
+            <h3 className="text-xs text-zinc-400 uppercase tracking-widest font-medium">24-Hour Unified Breakdown</h3>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-zinc-500 tabular-nums">{Math.round(totalAllocated * 10) / 10}h accounted for</span>
+            <span className={`text-xs font-bold tabular-nums ${overBudget ? 'text-red-400' : remaining <= 2 ? 'text-yellow-400' : 'text-emerald-400'}`}>
+              {overBudget ? `${Math.abs(remaining)}h over 24h` : `${freeHours}h untracked`}
+            </span>
+          </div>
         </div>
-        <div className="flex h-10 rounded-lg overflow-hidden gap-0.5">
-          {totalProd > 0 && (
-            <div className="bg-blue-500/80 flex items-center justify-center transition-all duration-500" style={{ width: `${(totalProd/16)*100}%` }}>
-              <span className="text-[10px] font-bold text-white/90 drop-shadow">{totalProd}h</span>
+        <div className="flex h-12 rounded-lg overflow-hidden gap-0.5">
+          {segments.map(s => (
+            <div key={s.label} className={`${s.color} flex items-center justify-center transition-all duration-500 relative group/seg`}
+              style={{ width: `${(s.hours / 24) * 100}%` }}>
+              {s.hours >= 1 && <span className="text-xs font-bold text-white/90 drop-shadow">{Math.round(s.hours * 10) / 10}h</span>}
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-zinc-800 text-white text-xs px-2.5 py-1 rounded opacity-0 group-hover/seg:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                {s.label}: {Math.round(s.hours * 10) / 10}h
+              </div>
             </div>
-          )}
-          {data.unproductiveHours > 0 && (
-            <div className="bg-orange-500/60 flex items-center justify-center transition-all duration-500" style={{ width: `${(data.unproductiveHours/16)*100}%` }}>
-              <span className="text-[10px] font-bold text-white/80">{data.unproductiveHours}h</span>
-            </div>
-          )}
-          {(16 - totalProd - data.unproductiveHours) > 0 && (
+          ))}
+          {freeHours > 0 && (
             <div className="bg-[#1a1a1e] flex items-center justify-center flex-1 transition-all duration-500">
-              <span className="text-[10px] text-zinc-600">{Math.max(0, Math.round((16 - totalProd - data.unproductiveHours)*10)/10)}h untracked</span>
+              {freeHours >= 1.5 && <span className="text-xs text-zinc-600 font-medium">{freeHours}h</span>}
             </div>
           )}
         </div>
-        <div className="flex gap-6 mt-3 text-[10px] text-zinc-500">
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-blue-500/80" /> Productive</span>
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-orange-500/60" /> Wasted</span>
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#1a1a1e]" /> Untracked</span>
+        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 justify-center md:justify-start">
+          {segments.map(s => (
+            <span key={s.label} className="flex items-center gap-1.5 text-xs text-zinc-500 font-medium">
+              <span className={`w-3 h-3 rounded-sm ${s.color}`} />{s.label}
+            </span>
+          ))}
+          <span className="flex items-center gap-1.5 text-xs text-zinc-500 font-medium">
+            <span className="w-3 h-3 rounded-sm bg-[#1a1a1e]" />Untracked
+          </span>
         </div>
       </Card>
     </div>
