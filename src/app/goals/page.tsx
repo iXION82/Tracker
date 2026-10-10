@@ -19,7 +19,7 @@ export default async function GoalsPage() {
   const serializedHabits = JSON.parse(JSON.stringify(habits));
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <div className="container mx-auto p-6 md:p-10 w-full max-w-[1400px]">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">Goals</h1>
