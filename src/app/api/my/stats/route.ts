@@ -7,13 +7,11 @@ export async function POST(request: Request) {
   try {
     await connectDB();
     const body = await request.json();
-    const { longestSessionMinutes } = body;
-    
     const date = getTodayString();
     
     const entry = await DailyStats.findOneAndUpdate(
       { date },
-      { $set: { date, longestSessionMinutes } },
+      { $set: { ...body, date } },
       { new: true, upsert: true, runValidators: true }
     );
     

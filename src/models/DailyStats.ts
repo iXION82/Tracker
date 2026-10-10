@@ -14,6 +14,10 @@ export interface IDailyStatsDocument {
   habitsCompleted: number;
   tasksCompleted: number;
   totalScore: number;
+  unproductiveHours?: number;
+  phoneTimeMinutes?: number;
+  pcTimeMinutes?: number;
+  productiveSessions?: number;
   leetcodeProblems?: number;
   githubCommits?: number;
   codeforcesRating?: number;
@@ -36,6 +40,13 @@ const DailyStatsSchema = new Schema<IDailyStatsDocument>(
     habitsCompleted: { type: Number, default: 0 },
     tasksCompleted: { type: Number, default: 0 },
     totalScore: { type: Number, default: 0 },
+    
+    // New metrics
+    unproductiveHours: { type: Number, default: 0 },
+    phoneTimeMinutes: { type: Number, default: 0 },
+    pcTimeMinutes: { type: Number, default: 0 },
+    productiveSessions: { type: Number, default: 0 },
+    
     leetcodeProblems: { type: Number, default: 0 },
     githubCommits: { type: Number, default: 0 },
     codeforcesRating: { type: Number, default: 0 },
