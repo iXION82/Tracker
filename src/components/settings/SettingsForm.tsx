@@ -17,20 +17,33 @@ interface SettingsFormProps {
 
 export default function SettingsForm({ initialSettings }: SettingsFormProps) {
   const [settings, setSettings] = useState(initialSettings || {
+    name: 'User',
     theme: 'dark',
-    dashboardWidgets: {
-      habits: true,
-      tasks: true,
-      mood: true,
-      time: true
-    },
+    accentColor: '#3B82F6',
+    dashboardWidgets: [
+      'dailyCompletion',
+      'currentStreak',
+      'habitsCompleted',
+      'tasksCompleted',
+      'productivity',
+    ],
     lifeScoreWeights: {
-      health: 20,
-      productivity: 30,
-      mindfulness: 20,
-      learning: 30
+      health: 30,
+      learning: 25,
+      productivity: 25,
+      habits: 20
+    },
+    integrations: {
+      githubUsername: '',
+      leetcodeUsername: '',
+      codeforcesUsername: ''
     }
   });
+
+  // Ensure integrations exists
+  if (!settings.integrations) {
+    settings.integrations = { githubUsername: '', leetcodeUsername: '', codeforcesUsername: '' };
+  }
 
   const [loading, setLoading] = useState(false);
 
@@ -66,34 +79,51 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
   };
 
   const handleWidgetToggle = (widget: string, checked: boolean) => {
+    const widgets = [...settings.dashboardWidgets];
+    if (checked && !widgets.includes(widget)) {
+      widgets.push(widget);
+    } else if (!checked && widgets.includes(widget)) {
+      const index = widgets.indexOf(widget);
+      if (index > -1) widgets.splice(index, 1);
+    }
+    setSettings({ ...settings, dashboardWidgets: widgets });
+  };
+
+  const handleIntegrationChange = (platform: string, value: string) => {
     setSettings({
       ...settings,
-      dashboardWidgets: {
-        ...settings.dashboardWidgets,
-        [widget]: checked
+      integrations: {
+        ...settings.integrations,
+        [platform]: value
       }
     });
   };
 
   const totalWeight = Object.values(settings.lifeScoreWeights).reduce((a: any, b: any) => a + b, 0);
 
+  const availableWidgets = [
+    { id: 'dailyCompletion', label: 'Daily Completion' },
+    { id: 'currentStreak', label: 'Current Streak' },
+    { id: 'habitsCompleted', label: 'Habits Completed' },
+    { id: 'tasksCompleted', label: 'Tasks Completed' },
+    { id: 'productivity', label: 'Productivity' }
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-      {/* Sidebar navigation could go here, for now it's a single long scrollable view */}
-      
       <div className="md:col-span-4 space-y-6">
-        <div className="flex justify-between items-center bg-[#111113] p-4 rounded-xl border border-white/5 sticky top-4 z-10">
+        <div className="flex justify-between items-center bg-[#111113] p-4 rounded-xl border border-white/[0.04] sticky top-4 z-10 shadow-xl">
           <div>
             <h2 className="text-lg font-medium text-white">Save Changes</h2>
             <p className="text-sm text-zinc-400">Apply your settings modifications</p>
           </div>
-          <Button onClick={handleSave} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button onClick={handleSave} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg shadow-blue-500/20">
             <Save className="w-4 h-4 mr-2" />
             {loading ? 'Saving...' : 'Save Settings'}
           </Button>
         </div>
 
-        <Card className="bg-[#111113] border-white/5 text-white">
+        <Card className="bg-[#111113] border-white/[0.04] text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="w-5 h-5 text-blue-500" /> Profile
@@ -103,43 +133,55 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
           <CardContent className="space-y-4">
             <div className="space-y-2 max-w-md">
               <Label>Display Name</Label>
-              <Input defaultValue="User" className="bg-[#18181B] border-white/10" />
+              <Input 
+                value={settings.name} 
+                onChange={(e) => setSettings({...settings, name: e.target.value})}
+                className="bg-[#18181B] border-white/10 h-11 focus-visible:ring-1 focus-visible:ring-blue-500" 
+              />
             </div>
             <div className="space-y-2">
               <Label>Avatar</Label>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-[#18181B] border border-white/10 flex items-center justify-center text-xl text-zinc-500">
-                  U
+                  {settings.name?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
-                <Button variant="outline" className="border-white/10">Upload Image</Button>
+                <Button variant="outline" className="border-white/10 hover:bg-white/5">Upload Image</Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-[#111113] border-white/5 text-white">
+        {/* ── Integrations ── */}
+        <Card className="bg-[#111113] border-white/[0.04] text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Palette className="w-5 h-5 text-purple-500" /> Appearance
+              <Target className="w-5 h-5 text-purple-500" /> Developer Integrations
             </CardTitle>
-            <CardDescription className="text-zinc-400">Customize how LifeOS looks</CardDescription>
+            <CardDescription className="text-zinc-400">Connect your accounts for Analytics tracking</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <Label>Theme</Label>
-              <div className="flex gap-4">
-                <div className="w-32 h-24 rounded-lg bg-[#0A0A0B] border-2 border-blue-500 flex items-center justify-center cursor-pointer">
-                  <span className="text-sm font-medium">Dark Mode</span>
-                </div>
-                <div className="w-32 h-24 rounded-lg bg-zinc-100 border border-transparent flex items-center justify-center opacity-50 cursor-not-allowed">
-                  <span className="text-sm font-medium text-zinc-900">Light (Soon)</span>
-                </div>
-              </div>
+          <CardContent className="space-y-4 max-w-md">
+            <div className="space-y-2">
+              <Label>GitHub Username</Label>
+              <Input 
+                value={settings.integrations.githubUsername} 
+                onChange={(e) => handleIntegrationChange('githubUsername', e.target.value)}
+                placeholder="e.g. torvalds"
+                className="bg-[#18181B] border-white/10 h-11 focus-visible:ring-1 focus-visible:ring-purple-500" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>LeetCode Username</Label>
+              <Input 
+                value={settings.integrations.leetcodeUsername} 
+                onChange={(e) => handleIntegrationChange('leetcodeUsername', e.target.value)}
+                placeholder="e.g. neetcode"
+                className="bg-[#18181B] border-white/10 h-11 focus-visible:ring-1 focus-visible:ring-yellow-500" 
+              />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-[#111113] border-white/5 text-white">
+        <Card className="bg-[#111113] border-white/[0.04] text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <LayoutDashboard className="w-5 h-5 text-green-500" /> Dashboard Layout
@@ -147,19 +189,19 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
             <CardDescription className="text-zinc-400">Show or hide widgets on your home screen</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 max-w-md">
-            {Object.entries(settings.dashboardWidgets).map(([key, value]) => (
-              <div key={key} className="flex items-center justify-between py-2">
-                <Label className="capitalize">{key} Widget</Label>
+            {availableWidgets.map((widget) => (
+              <div key={widget.id} className="flex items-center justify-between py-2">
+                <Label>{widget.label}</Label>
                 <Switch 
-                  checked={value as boolean} 
-                  onCheckedChange={(c) => handleWidgetToggle(key, c)}
+                  checked={settings.dashboardWidgets.includes(widget.id)} 
+                  onCheckedChange={(c) => handleWidgetToggle(widget.id, c)}
                 />
               </div>
             ))}
           </CardContent>
         </Card>
 
-        <Card className="bg-[#111113] border-white/5 text-white">
+        <Card className="bg-[#111113] border-white/[0.04] text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5 text-orange-500" /> Life Score Weights
@@ -181,73 +223,17 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
                   max={100}
                   step={5}
                   onValueChange={(v) => { const val = Array.isArray(v) ? v : [v]; handleWeightChange(key, val as number[]); }}
-                  className="py-2"
+                  className="py-2 cursor-pointer"
                 />
               </div>
             ))}
             {totalWeight !== 100 && (
-              <div className="text-red-400 text-sm mt-2">
+              <div className="text-red-400 text-sm mt-2 font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
                 Weights must total exactly 100%. Please adjust the sliders.
               </div>
             )}
           </CardContent>
         </Card>
-
-        <Card className="bg-[#111113] border-white/5 text-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Keyboard className="w-5 h-5 text-zinc-400" /> Keyboard Shortcuts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 max-w-lg">
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
-                <span className="text-zinc-300">New Task</span>
-                <kbd className="px-2 py-1 bg-[#18181B] rounded text-xs text-zinc-400">T</kbd>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
-                <span className="text-zinc-300">New Journal</span>
-                <kbd className="px-2 py-1 bg-[#18181B] rounded text-xs text-zinc-400">J</kbd>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
-                <span className="text-zinc-300">Start Timer</span>
-                <kbd className="px-2 py-1 bg-[#18181B] rounded text-xs text-zinc-400">S</kbd>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/5">
-                <span className="text-zinc-300">Go to Dashboard</span>
-                <kbd className="px-2 py-1 bg-[#18181B] rounded text-xs text-zinc-400">G D</kbd>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-[#111113] border-white/5 text-white border-red-500/20">
-          <CardHeader>
-            <CardTitle className="text-red-400">Danger Zone</CardTitle>
-            <CardDescription className="text-zinc-400">Manage your data</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-[#18181B] rounded-lg border border-white/5">
-              <div>
-                <h4 className="font-medium text-white">Export Data</h4>
-                <p className="text-sm text-zinc-400">Download all your data as JSON</p>
-              </div>
-              <Button variant="outline" className="border-white/10">
-                <Download className="w-4 h-4 mr-2" /> Export
-              </Button>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-[#18181B] rounded-lg border border-red-500/10">
-              <div>
-                <h4 className="font-medium text-red-400">Reset Account</h4>
-                <p className="text-sm text-zinc-400">Permanently delete all your data</p>
-              </div>
-              <Button variant="destructive" className="bg-red-900/50 hover:bg-red-900 text-red-200">
-                <RotateCcw className="w-4 h-4 mr-2" /> Reset Data
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
       </div>
     </div>
   );

@@ -22,7 +22,7 @@ export default function StudyTimeChart({ data }: { data: any[] }) {
           tick={{ fill: '#71717a', fontSize: 12 }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(val) => `${val}m`}
+          tickFormatter={(val) => `${val}h`}
         />
         <Tooltip 
           contentStyle={{ backgroundColor: '#18181B', borderColor: 'rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }}
