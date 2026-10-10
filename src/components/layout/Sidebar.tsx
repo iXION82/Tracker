@@ -26,7 +26,6 @@ const navItems = [
   { href: '/tracker', label: 'Tracker', icon: Grid3X3 },
   { href: '/my', label: 'My', icon: Activity },
   { href: '/goals', label: 'Goals', icon: Target },
-  { href: '/bad-habits', label: 'Bad Habits', icon: ShieldAlert },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];

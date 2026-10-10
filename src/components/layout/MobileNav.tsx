@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Grid3X3, BarChart3, Activity, ShieldAlert, Settings } from 'lucide-react';
+import { LayoutDashboard, Grid3X3, BarChart3, Activity, ShieldAlert, Settings, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Dash', icon: LayoutDashboard },
   { href: '/tracker', label: 'Tracker', icon: Grid3X3 },
   { href: '/my', label: 'My', icon: Activity },
-  { href: '/bad-habits', label: 'Bad Habits', icon: ShieldAlert },
+  { href: '/goals', label: 'Goals', icon: Target },
   { href: '/settings', label: 'More', icon: Settings },
 ];
 

@@ -29,8 +29,8 @@ export default function GoalForm({ open, onOpenChange, goal, habits, onSuccess }
       setFormData({
         title: goal.title || '',
         description: goal.description || '',
-        target: goal.target || 100,
-        currentValue: goal.currentValue || 0,
+        target: goal.target ?? 100,
+        currentValue: goal.currentValue ?? 0,
         unit: goal.unit || '',
         deadline: goal.deadline ? new Date(goal.deadline).toISOString().split('T')[0] : '',
         category: goal.category || 'personal',
@@ -61,10 +61,21 @@ export default function GoalForm({ open, onOpenChange, goal, habits, onSuccess }
       const url = goal ? `/api/goals/${goal._id}` : '/api/goals';
       const method = goal ? 'PATCH' : 'POST';
       
+      // Clean payload: strip empty deadline, clamp currentValue
+      const payload: any = { ...formData };
+      if (!payload.deadline) delete payload.deadline;
+      if (payload.target > 0) {
+        payload.currentValue = Math.min(payload.currentValue, payload.target);
+      }
+      // Auto-set status to completed if currentValue meets target
+      if (payload.target > 0 && payload.currentValue >= payload.target && payload.status === 'active') {
+        payload.status = 'completed';
+      }
+      
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
       
       const data = await res.json();
