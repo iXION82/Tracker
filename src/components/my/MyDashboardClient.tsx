@@ -2,7 +2,6 @@
 
 import { useState, useRef, useMemo } from "react";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { 
   Clock, Smartphone, Monitor, Target, Moon, Coffee, 
@@ -113,7 +112,12 @@ export default function MyDashboardClient({ initialData }: { initialData: any })
     pcMinutes: (initialData.pcTimeMinutes || 0) % 60,
     productiveSessions: initialData.productiveSessions || 0,
     sleepDuration: initialData.sleep?.duration || 0,
-    sleepQuality: QUALITY_REVERSE[initialData.sleep?.quality] || 0
+    sleepQuality: (() => {
+      const q = initialData.sleep?.quality;
+      if (typeof q === 'number') return q;
+      if (typeof q === 'string') return QUALITY_REVERSE[q] || 0;
+      return 0;
+    })()
   });
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -126,6 +130,21 @@ export default function MyDashboardClient({ initialData }: { initialData: any })
   };
 
   const save = async (d: typeof data) => {
+    // Compute a rough day score for analytics
+    const prodH = initialData.windows?.reduce((a: number, w: any) => a + (w.productiveHours || 0), 0) || 0;
+    const hComp = initialData.habits?.completed || 0;
+    const hTotal = initialData.habits?.total || 1;
+    const hPct = hComp / hTotal;
+    const phoneMn = d.phoneHours * 60 + d.phoneMinutes;
+    let score = 0;
+    score += Math.min(prodH / 10, 1) * 40;
+    score += hPct * 25;
+    const sl = d.sleepDuration >= 7 && d.sleepDuration <= 9 ? 1 : d.sleepDuration >= 5 ? 0.6 : 0.2;
+    score += sl * 15;
+    score += Math.min(Math.max(1 - d.unproductiveHours / 8, 0), 1) * 10;
+    score += Math.min(Math.max(1 - phoneMn / 300, 0), 1) * 10;
+    const totalScore = Math.round(score);
+
     try {
       const [r1, r2] = await Promise.all([
         fetch('/api/my/stats', {
@@ -135,15 +154,19 @@ export default function MyDashboardClient({ initialData }: { initialData: any })
             unproductiveHours: d.unproductiveHours,
             phoneTimeMinutes: d.phoneHours * 60 + d.phoneMinutes,
             pcTimeMinutes: d.pcHours * 60 + d.pcMinutes,
-            productiveSessions: d.productiveSessions
+            productiveSessions: d.productiveSessions,
+            sleep: { duration: d.sleepDuration, quality: d.sleepQuality || 3 },
+            habitsCompleted: hComp,
+            totalScore
           })
         }),
         fetch('/api/sleep', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ date: new Date().toISOString(), duration: d.sleepDuration, quality: QUALITY_MAP[d.sleepQuality] || 'none' })
+          body: JSON.stringify({ date: new Date().toISOString(), duration: d.sleepDuration, quality: d.sleepQuality || 3 })
         })
       ]);
       if (r1.ok && r2.ok) toast.success("Auto-saved");
+      else if (!r1.ok || !r2.ok) toast.error("Partial save failure");
     } catch { toast.error("Failed to save"); }
   };
 

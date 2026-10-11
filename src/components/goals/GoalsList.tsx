@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, Target, CheckCircle2, TrendingUp, Clock } from 'lucide-react';
+import { Plus, Target, CheckCircle2, TrendingUp } from 'lucide-react';
 import GoalCard from './GoalCard';
 import GoalForm from './GoalForm';
 import { toast } from 'sonner';
@@ -22,8 +22,16 @@ export default function GoalsList({ initialGoals, habits }: { initialGoals: any[
   // Derived stats
   const activeCount = goals.filter(g => g.status === 'active').length;
   const completedCount = goals.filter(g => g.status === 'completed').length;
-  const overallProgress = goals.length > 0 
-    ? Math.round(goals.reduce((acc, g) => acc + (g.target > 0 ? Math.min(1, g.currentValue / g.target) : 0), 0) / goals.length * 100)
+  const nonAbandoned = goals.filter(g => g.status !== 'abandoned');
+  const overallProgress = nonAbandoned.length > 0 
+    ? Math.round(
+        nonAbandoned.reduce((acc, g) => {
+          const val = g.currentValue ?? 0;
+          const tgt = g.target ?? 1;
+          const pct = tgt > 0 ? Math.min(1, Math.max(0, val / tgt)) : 0;
+          return acc + pct;
+        }, 0) / nonAbandoned.length * 100
+      )
     : 0;
 
   const handleDelete = async (id: string) => {
@@ -45,11 +53,13 @@ export default function GoalsList({ initialGoals, habits }: { initialGoals: any[
     const goal = goals.find(g => g._id === goalId);
     if (!goal) return;
 
-    // Auto-complete when target is reached
+    // Auto-complete or revert status
     const reachedTarget = newValue >= goal.target;
     const updatedFields: any = { currentValue: newValue };
     if (reachedTarget && goal.status === 'active') {
       updatedFields.status = 'completed';
+    } else if (!reachedTarget && goal.status === 'completed') {
+      updatedFields.status = 'active';
     }
 
     // Optimistic update
@@ -66,7 +76,7 @@ export default function GoalsList({ initialGoals, habits }: { initialGoals: any[
       const data = await res.json();
       if (data.success && data.data) {
         // Sync server response back
-        setGoals(prev => prev.map(g => g._id === goalId ? { ...g, ...JSON.parse(JSON.stringify(data.data)) } : g));
+        setGoals(prev => prev.map(g => g._id === goalId ? { ...g, ...data.data } : g));
       }
       if (reachedTarget && goal.status === 'active') {
         toast.success('🎉 Goal completed!');

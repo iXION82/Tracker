@@ -14,8 +14,8 @@ export async function GET(request: Request) {
     
     if (startDate && endDate) {
       query.date = {
-        $gte: startOfDay(parseISO(startDate)),
-        $lte: endOfDay(parseISO(endDate))
+        $gte: startDate.split('T')[0],
+        $lte: endDate.split('T')[0]
       };
     }
 

@@ -16,15 +16,11 @@ export async function GET(request: Request) {
     if (habitId) query.habitId = habitId;
     
     if (date) {
-      const parsedDate = parseISO(date);
-      query.date = {
-        $gte: startOfDay(parsedDate),
-        $lte: endOfDay(parsedDate)
-      };
+      query.date = date.split('T')[0];
     } else if (startDate && endDate) {
       query.date = {
-        $gte: startOfDay(parseISO(startDate)),
-        $lte: endOfDay(parseISO(endDate))
+        $gte: startDate.split('T')[0],
+        $lte: endDate.split('T')[0]
       };
     }
 

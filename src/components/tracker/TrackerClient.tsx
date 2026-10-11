@@ -30,12 +30,15 @@ export default function TrackerClient() {
     setLoading(true);
     try {
       const res = await fetch(`/api/tracker?year=${y}&month=${m}`);
+      if (!res.ok) throw new Error('Failed to load');
       const json = await res.json();
       if (json.success) {
         setHabits(json.data.habits);
         setLogs(json.data.logs);
         setDaysInMonth(json.data.daysInMonth);
         updateDerivedState(json.data.logs, json.data.habits, y, m, json.data.daysInMonth);
+      } else {
+        toast.error(json.error || 'Failed to load tracker data');
       }
     } catch (err) {
       toast.error('Failed to load tracker data');
@@ -49,7 +52,9 @@ export default function TrackerClient() {
 
   const updateDerivedState = (currentLogs: LogsType, currentHabits: IHabit[], y: number, m: number, dim: number) => {
     const today = new Date();
-    const currentDay = today.getFullYear() === y && today.getMonth() + 1 === m ? today.getDate() : dim;
+    const isCurrentMonth = today.getFullYear() === y && today.getMonth() + 1 === m;
+    const isPastMonth = y < today.getFullYear() || (y === today.getFullYear() && m < today.getMonth() + 1);
+    const elapsedDays = isCurrentMonth ? today.getDate() : isPastMonth ? dim : 0;
     
     let totalComps = 0;
     const newChartData = [];
@@ -74,15 +79,19 @@ export default function TrackerClient() {
         id: hid,
         name: h.name,
         color: h.color || '#3b82f6',
-        completionRate: currentDay > 0 ? completions / currentDay : 0
+        completionRate: elapsedDays > 0 ? completions / elapsedDays : 0
       };
     });
     
-    const todayIdx = Math.max(0, currentDay - 1);
     setChartData(newChartData);
     setHabitsStats(newHabitsStats);
     setTotalCompletions(totalComps);
-    setTodayCompleted(newChartData[todayIdx]?.completed || 0);
+    if (isCurrentMonth) {
+      const todayIdx = Math.max(0, today.getDate() - 1);
+      setTodayCompleted(newChartData[todayIdx]?.completed || 0);
+    } else {
+      setTodayCompleted(0);
+    }
     setTodayTotal(currentHabits.length);
   };
 
@@ -146,12 +155,12 @@ export default function TrackerClient() {
   const possibleCompletions = daysInMonth * habits.length;
   const overallCompletionRate = possibleCompletions > 0 ? (totalCompletions / possibleCompletions) * 100 : 0;
   
-  let bestDay = { date: '', completed: -1 };
+  let bestDay = { date: '-', completed: 0 };
   chartData.forEach(d => {
     if (d.completed > bestDay.completed) bestDay = { date: d.date, completed: d.completed };
   });
 
-  let bestHabit = { name: '-', rate: -1 };
+  let bestHabit = { name: '-', rate: 0 };
   habitsStats.forEach(h => {
     if (h.completionRate > bestHabit.rate) bestHabit = { name: h.name, rate: h.completionRate };
   });
@@ -192,11 +201,11 @@ export default function TrackerClient() {
         </div>
         <div className="bg-[#111113] border border-white/5 rounded-xl p-4">
           <div className="text-xs text-zinc-500 mb-1">Best Day</div>
-          <div className="text-xl font-bold text-white truncate">{bestDay.date || '-'}</div>
+          <div className="text-xl font-bold text-white truncate">{bestDay.completed > 0 ? bestDay.date : '-'}</div>
         </div>
         <div className="bg-[#111113] border border-white/5 rounded-xl p-4">
           <div className="text-xs text-zinc-500 mb-1">Best Habit</div>
-          <div className="text-xl font-bold text-white truncate">{bestHabit.name}</div>
+          <div className="text-xl font-bold text-white truncate">{bestHabit.rate > 0 ? bestHabit.name : '-'}</div>
         </div>
       </div>
 

@@ -44,8 +44,8 @@ export function TimelineVisualizer({ windows }: TimelineVisualizerProps) {
           {times.map((time, i) => {
             const isBottom = i === times.length - 1; // 8 AM
             const windowKey = time.endOf as TimeWindow | null;
-            const data = windowKey ? windows[windowKey] : null;
-            const hasHours = data && data.hours > 0;
+            const data = windowKey && windows ? windows[windowKey] : null;
+            const hasHours = data && (data.hours || 0) > 0;
             
             return (
               <div 
@@ -64,7 +64,7 @@ export function TimelineVisualizer({ windows }: TimelineVisualizerProps) {
                       "bg-gradient-to-t from-blue-500 via-indigo-400 to-purple-500",
                       "bg-[length:auto_200%] animate-[gradient_3s_linear_infinite] rounded-full"
                     )}
-                    style={{ height: `${Math.min(data.hours / 4 * 100, 100)}%` }}
+                    style={{ height: `${Math.min(100, Math.max(0, ((data.hours || 0) / 4) * 100))}%` }}
                   />
                 )}
 

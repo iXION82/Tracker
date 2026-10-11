@@ -6,8 +6,11 @@ interface TopHabitsProps {
   habits: Array<{ id: string; name: string; color: string; completionRate: number }>;
 }
 
-export default function TopHabits({ habits }: TopHabitsProps) {
-  const sorted = [...habits].sort((a, b) => b.completionRate - a.completionRate).slice(0, 10);
+export default function TopHabits({ habits = [] }: TopHabitsProps) {
+  const sorted = (habits || [])
+    .filter(h => h && (h.completionRate ?? 0) > 0)
+    .sort((a, b) => (b.completionRate ?? 0) - (a.completionRate ?? 0))
+    .slice(0, 10);
 
   return (
     <Card className="w-full bg-[#111113] border-white/5 h-full">
@@ -17,7 +20,7 @@ export default function TopHabits({ habits }: TopHabitsProps) {
       <CardContent>
         <div className="space-y-4 mt-4">
           {sorted.length === 0 ? (
-            <p className="text-sm text-zinc-500 text-center py-4">No data available</p>
+            <p className="text-sm text-zinc-500 text-center py-4">No active habits logged yet</p>
           ) : (
             sorted.map((habit, idx) => (
               <div key={habit.id} className="flex items-center justify-between">
@@ -31,7 +34,7 @@ export default function TopHabits({ habits }: TopHabitsProps) {
                   </div>
                 </div>
                 <span className="text-sm font-medium" style={{ color: habit.color }}>
-                  {Math.round(habit.completionRate * 100)}%
+                  {Math.round((habit.completionRate || 0) * 100)}%
                 </span>
               </div>
             ))

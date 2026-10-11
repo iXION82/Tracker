@@ -10,9 +10,9 @@ export async function GET(request: Request) {
     
     const query: any = {};
     if (active === 'true') {
-      query.isActive = true;
+      query.active = true;
     } else if (active === 'false') {
-      query.isActive = false;
+      query.active = false;
     }
 
     const habits = await Habit.find(query).sort({ order: 1, createdAt: -1 });

@@ -32,7 +32,18 @@ export default function GoalForm({ open, onOpenChange, goal, habits, onSuccess }
         target: goal.target ?? 100,
         currentValue: goal.currentValue ?? 0,
         unit: goal.unit || '',
-        deadline: goal.deadline ? new Date(goal.deadline).toISOString().split('T')[0] : '',
+        deadline: (() => {
+          if (!goal.deadline) return '';
+          if (typeof goal.deadline === 'string' && /^\d{4}-\d{2}-\d{2}/.test(goal.deadline)) {
+            return goal.deadline.slice(0, 10);
+          }
+          try {
+            const d = new Date(goal.deadline);
+            return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+          } catch {
+            return '';
+          }
+        })(),
         category: goal.category || 'personal',
         color: goal.color || '#3b82f6',
         status: goal.status || 'active',
@@ -61,9 +72,11 @@ export default function GoalForm({ open, onOpenChange, goal, habits, onSuccess }
       const url = goal ? `/api/goals/${goal._id}` : '/api/goals';
       const method = goal ? 'PATCH' : 'POST';
       
-      // Clean payload: strip empty deadline, clamp currentValue
+      // Clean payload: pass null to clear deadline, clamp currentValue
       const payload: any = { ...formData };
-      if (!payload.deadline) delete payload.deadline;
+      if (!payload.deadline) {
+        payload.deadline = null;
+      }
       if (payload.target > 0) {
         payload.currentValue = Math.min(payload.currentValue, payload.target);
       }
@@ -126,8 +139,8 @@ export default function GoalForm({ open, onOpenChange, goal, habits, onSuccess }
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="unit" className="text-xs text-zinc-400 uppercase tracking-widest font-medium">Unit</Label>
-              <Input id="unit" placeholder="e.g. books, kg, %" value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className="bg-[#1a1a1e] border-white/5 text-white h-11 focus-visible:ring-1 focus-visible:ring-blue-500" />
+              <Label htmlFor="unit" className="text-xs text-zinc-400 uppercase tracking-widest font-medium">Unit *</Label>
+              <Input id="unit" required placeholder="e.g. books, kg, %" value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className="bg-[#1a1a1e] border-white/5 text-white h-11 focus-visible:ring-1 focus-visible:ring-blue-500" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="deadline" className="text-xs text-zinc-400 uppercase tracking-widest font-medium">Deadline</Label>

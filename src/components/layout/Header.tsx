@@ -3,9 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Bell, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 export function Header() {
@@ -31,7 +29,6 @@ export function Header() {
     { label: 'Tracker', href: '/tracker' },
     { label: 'My', href: '/my' },
     { label: 'Goals', href: '/goals' },
-    { label: 'Bad Habits', href: '/bad-habits' },
     { label: 'Analytics', href: '/analytics' },
   ];
 

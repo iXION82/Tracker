@@ -17,8 +17,10 @@ export function ProductivitySummary({
   onePercentStreak,
   longSessionStreak
 }: ProductivitySummaryProps) {
-  const percentage = goalHours > 0 ? Math.round((totalHours / goalHours) * 100) : 0;
-  const remaining = Math.max(0, goalHours - totalHours);
+  const safeTotal = totalHours ?? 0;
+  const safeGoal = goalHours ?? 0;
+  const percentage = safeGoal > 0 ? Math.min(100, Math.max(0, Math.round((safeTotal / safeGoal) * 100))) : 0;
+  const remaining = Math.max(0, Math.round((safeGoal - safeTotal) * 10) / 10);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -30,20 +32,20 @@ export function ProductivitySummary({
           <div>
             <h3 className="text-zinc-400 text-sm font-medium mb-1">TODAY&apos;S PRODUCTIVITY</h3>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-white">{totalHours}</span>
-              <span className="text-xl text-zinc-500">/ {goalHours}h</span>
+              <span className="text-4xl font-bold text-white">{safeTotal}</span>
+              <span className="text-xl text-zinc-500">/ {safeGoal}h</span>
             </div>
           </div>
 
           <div className="text-right">
             <span className="text-2xl font-bold text-blue-400">{percentage}%</span>
             <p className="text-xs text-zinc-500 mt-1">
-              {totalHours >= goalHours ? "Goal Completed" : `${remaining}h remaining`}
+              {safeTotal >= safeGoal && safeGoal > 0 ? "Goal Completed" : `${remaining}h remaining`}
             </p>
           </div>
         </div>
 
-        <Progress value={Math.min(percentage, 100)} className="h-2 bg-white/5" />
+        <Progress value={percentage} className="h-2 bg-white/5" />
       </div>
 
       {/* CONSISTENCY streak */}

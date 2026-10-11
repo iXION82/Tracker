@@ -13,8 +13,8 @@ export interface ISleepEntryDocument {
 const SleepEntrySchema = new Schema<ISleepEntryDocument>(
   {
     date: { type: String, required: true, index: true, unique: true },
-    sleepTime: { type: String, required: true },
-    wakeTime: { type: String, required: true },
+    sleepTime: { type: String },
+    wakeTime: { type: String },
     duration: { type: Number, required: true },
     quality: { type: Number, min: 1, max: 5, default: 3 },
     note: { type: String },

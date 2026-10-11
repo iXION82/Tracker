@@ -5,17 +5,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, 
-  CalendarCheck, 
   Grid3X3, 
-  Calendar, 
   Target, 
-  ListTodo, 
   BarChart3, 
   Settings,
   ChevronLeft,
   ChevronRight,
-  Activity,
-  ShieldAlert
+  Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

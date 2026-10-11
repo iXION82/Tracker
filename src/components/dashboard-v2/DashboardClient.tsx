@@ -77,7 +77,7 @@ export default function DashboardClient() {
     }
   };
 
-  const totalHours = Object.values(data).reduce((acc, curr) => acc + curr.hours, 0);
+  const totalHours = Object.values(data || {}).reduce((acc, curr) => acc + (curr?.hours || 0), 0);
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-64 text-zinc-500">Loading LifeOS...</div>;
@@ -105,9 +105,9 @@ export default function DashboardClient() {
               <TimeWindowCard
                 key={w}
                 window={w}
-                initialHours={data[w].hours}
-                initialMood={data[w].mood}
-                initialNote={data[w].note}
+                initialHours={data[w]?.hours ?? 0}
+                initialMood={data[w]?.mood}
+                initialNote={data[w]?.note ?? ''}
                 onUpdate={(d) => handleUpdate(w, d)}
               />
             ))}

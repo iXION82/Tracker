@@ -14,20 +14,22 @@ interface MonthlyGridProps {
   onHabitUpdate?: () => void;
 }
 
-export default function MonthlyGrid({ habits, logs, year, month, onToggle, onHabitUpdate }: MonthlyGridProps) {
+export default function MonthlyGrid({ habits = [], logs = {}, year, month, onToggle, onHabitUpdate }: MonthlyGridProps) {
   const daysInMonth = new Date(year, month, 0).getDate();
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const today = new Date();
-  const currentDay = today.getFullYear() === year && today.getMonth() + 1 === month ? today.getDate() : -1;
+  const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month;
+  const isFutureMonth = year > today.getFullYear() || (year === today.getFullYear() && month > today.getMonth() + 1);
+  const currentDay = isCurrentMonth ? today.getDate() : -1;
 
   const getWeekColor = (day: number) => {
     const week = Math.ceil(day / 7);
     switch(week) {
-      case 1: return 'bg-green-500/10 text-green-500';
-      case 2: return 'bg-cyan-500/10 text-cyan-500';
-      case 3: return 'bg-blue-500/10 text-blue-500';
-      case 4: return 'bg-purple-500/10 text-purple-500';
-      default: return 'bg-pink-500/10 text-pink-500';
+      case 1: return 'bg-emerald-500/50';
+      case 2: return 'bg-cyan-500/50';
+      case 3: return 'bg-blue-500/50';
+      case 4: return 'bg-purple-500/50';
+      default: return 'bg-pink-500/50';
     }
   };
 
@@ -93,7 +95,7 @@ export default function MonthlyGrid({ habits, logs, year, month, onToggle, onHab
                     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                     const hid = habit._id as string;
                     const isCompleted = logs[hid]?.[dateStr]?.completed;
-                    const isFuture = day > currentDay && currentDay !== -1;
+                    const isFuture = isFutureMonth || (isCurrentMonth && day > currentDay);
                     
                     return (
                       <button

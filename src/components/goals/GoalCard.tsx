@@ -6,22 +6,27 @@ import { MoreVertical, Edit, Trash2, Plus, Minus, CheckCircle2, Link as LinkIcon
 import { formatDistanceToNow, isPast } from 'date-fns';
 
 export default function GoalCard({ goal, onEdit, onDelete, onUpdate }: { goal: any, onEdit: () => void, onDelete: () => void, onUpdate: (newVal: number) => void }) {
-  const percentage = goal.target > 0 ? Math.min(100, Math.round((goal.currentValue / goal.target) * 100)) : 0;
+  const currentValue = goal.currentValue ?? 0;
+  const target = goal.target ?? 1;
+  const percentage = target > 0 ? Math.min(100, Math.max(0, Math.round((currentValue / target) * 100))) : 0;
   const isCompleted = percentage >= 100 || goal.status === 'completed';
 
   const handleQuickAdd = (amount: number) => {
-    const newVal = Math.min(goal.target, Math.max(0, goal.currentValue + amount));
-    if (newVal !== goal.currentValue) onUpdate(newVal);
+    const newVal = Math.min(target, Math.max(0, currentValue + amount));
+    if (newVal !== currentValue) onUpdate(newVal);
   };
 
   const getDeadlineStatus = () => {
     if (!goal.deadline || isCompleted) return null;
-    const d = new Date(goal.deadline);
-    if (isPast(d)) return { text: 'Overdue', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' };
-    const diffDays = Math.ceil((d.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-    if (diffDays <= 3) return { text: `${diffDays}d left`, color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' };
-    if (diffDays <= 7) return { text: `${diffDays}d left`, color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' };
-    return { text: formatDistanceToNow(d, { addSuffix: true }), color: 'text-zinc-500', bg: 'bg-zinc-500/5 border-zinc-500/10' };
+    try {
+      const d = new Date(goal.deadline);
+      if (isNaN(d.getTime())) return null;
+      if (isPast(d)) return { text: 'Overdue', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' };
+      const diffDays = Math.ceil((d.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+      if (diffDays <= 3) return { text: `${diffDays}d left`, color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' };
+      if (diffDays <= 7) return { text: `${diffDays}d left`, color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' };
+      return { text: formatDistanceToNow(d, { addSuffix: true }), color: 'text-zinc-500', bg: 'bg-zinc-500/5 border-zinc-500/10' };
+    } catch { return null; }
   };
 
   const deadlineStatus = getDeadlineStatus();
@@ -128,10 +133,10 @@ export default function GoalCard({ goal, onEdit, onDelete, onUpdate }: { goal: a
 
             <div className="flex items-baseline gap-1">
               <span className="text-2xl font-black tabular-nums" style={{ color: isCompleted ? '#34d399' : '#fff' }}>
-                {goal.currentValue}
+                {currentValue}
               </span>
               <span className="text-xs text-zinc-600 font-medium">/</span>
-              <span className="text-sm font-semibold text-zinc-500 tabular-nums">{goal.target}</span>
+              <span className="text-sm font-semibold text-zinc-500 tabular-nums">{target}</span>
               <span className="text-[10px] text-zinc-600 ml-0.5">{goal.unit}</span>
             </div>
 

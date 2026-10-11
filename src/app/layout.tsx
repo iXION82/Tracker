@@ -5,8 +5,6 @@ import './globals.css';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { Header } from '@/components/layout/Header';
-import { SearchDialog } from '@/components/shared/SearchDialog';
-import { KeyboardShortcuts } from '@/components/shared/KeyboardShortcuts';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -36,11 +34,10 @@ export default function RootLayout({
             </div>
             <MobileNav />
           </main>
-          <SearchDialog />
-          <KeyboardShortcuts />
           <Toaster theme="dark" />
         </TooltipProvider>
       </body>
     </html>
   );
 }
+

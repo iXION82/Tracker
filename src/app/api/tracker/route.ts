@@ -7,8 +7,11 @@ export async function GET(request: Request) {
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
-    const year = parseInt(searchParams.get('year') || String(new Date().getFullYear()));
-    const month = parseInt(searchParams.get('month') || String(new Date().getMonth() + 1));
+    const now = new Date();
+    const rawYear = parseInt(searchParams.get('year') || '');
+    const rawMonth = parseInt(searchParams.get('month') || '');
+    const year = isNaN(rawYear) ? now.getFullYear() : rawYear;
+    const month = isNaN(rawMonth) || rawMonth < 1 || rawMonth > 12 ? (now.getMonth() + 1) : rawMonth;
     
     const habits = await Habit.find({ active: true }).lean();
     const daysInMonth = new Date(year, month, 0).getDate();
@@ -19,9 +22,10 @@ export async function GET(request: Request) {
     
     const formattedLogs: Record<string, Record<string, any>> = {};
     logs.forEach((log: any) => {
+      if (!log.habitId) return;
       const hid = log.habitId.toString();
       if (!formattedLogs[hid]) formattedLogs[hid] = {};
-      formattedLogs[hid][log.date] = { completed: log.completed, value: log.value };
+      formattedLogs[hid][log.date] = { completed: !!log.completed, value: log.value };
     });
     
     return NextResponse.json({

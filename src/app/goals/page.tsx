@@ -2,7 +2,6 @@ import connectDB from '@/lib/db';
 import Goal from '@/models/Goal';
 import Habit from '@/models/Habit';
 import GoalsList from '@/components/goals/GoalsList';
-import { IGoal } from '@/types';
 
 import { connection } from 'next/server';
 
@@ -12,7 +11,7 @@ export default async function GoalsPage() {
   
   // Fetch goals and habits
   const goals = await Goal.find({}).sort({ createdAt: -1 }).lean();
-  const habits = await Habit.find({}).sort({ title: 1 }).lean();
+  const habits = await Habit.find({}).sort({ name: 1 }).lean();
   
   // Serialize for client
   const serializedGoals = JSON.parse(JSON.stringify(goals));

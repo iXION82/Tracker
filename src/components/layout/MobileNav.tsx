@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Grid3X3, BarChart3, Activity, ShieldAlert, Settings, Target } from 'lucide-react';
+import { LayoutDashboard, Grid3X3, Activity, Settings, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
